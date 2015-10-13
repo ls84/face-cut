@@ -1,0 +1,8 @@
+{
+  "name":"face-cut",
+  "version":"0.0.1",
+  "main":"main.js",
+  "dependencies":{
+    "face-plus-plus":"0.0.3"
+  }
+}

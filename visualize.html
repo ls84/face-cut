@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script>
+      var assert = require('assert');
+      var remote = require('remote');
+      var sqlite3 = require('./lib/sqlite3.js');
+      var dialog = remote.require('dialog');
+      window.$ = window.jQuery = require('jquery');
+    </script>
+
+    <style>
+      /*
+      body {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+      */
+/*
+      #control {
+        margin-left: 15px;
+        margin-right: 15px;
+      }
+
+      #person_preview {
+        margin-left: -15px;
+        margin-right: -15px;
+      }
+
+      #img_preview {
+        margin-left: -15px;
+        margin-right: -15px;
+      }
+*/
+      .imgs {
+        width: 100%;
+      }
+
+      .addPerson {
+        text-align: center;
+      }
+      .preview_img {
+        padding-left:1px;
+        padding-right:1px;
+        padding-top:1px;
+        padding-bottom:1px;
+      }
+      .buttons {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+    </style>
+
+  </head>
+  <body>
+    <script>
+    var db;
+
+    var selected_person;
+
+    function loadData() {
+
+      dialog.showOpenDialog({ properties: [ 'openDirectory' ]},function(img_dir){
+
+        if (img_dir.length == 1) db = sqlite3(__dirname,img_dir[0]);
+
+        var person = loadPerson();
+
+        thisgrouploader = groupLoader();
+
+        console.log(person);
+
+      })
+
+    }
+
+    function loadPerson(person_name){
+
+      var person = db.getPerson()
+
+      return person
+
+    }
+
+    function groupLoader(session_id) {
+
+      console.log('loadGroupings: ', session_id);
+
+      var session_id = '09cfc9b27d58495fbe023fbf029c34e4'
+
+      var result = JSON.parse(db.getSessionResult(session_id)).result.group;
+
+      var iterator = 0;
+
+      var length = result.length
+
+      return function() {
+
+        if (iterator == length) return 'done'
+
+        var face_ids = result[iterator].map(function(v){
+          return v.face_id
+        })
+
+        var img_paths = db.faceMapImg(face_ids);
+
+        iterator += 1;
+
+        return '<div class="row">' + '<button id="addAllToPerson" onclick="addAllToPerson(this)">addAllToPerson</button>' + makeImgRow(face_ids,img_paths) + '</div>'
+
+      }
+
+    }
+
+    function makeImgRow(face_ids,img_paths){
+      //face_ids & img_paths are paired in order
+
+      var html = '';
+
+      var counter = 0;
+
+      face_ids.forEach(function(v,i){
+
+        counter += 1
+
+        if (counter%12 == 1) html += '<div class="row">'
+
+        html += '<div class="col-xs-1 col-sm-1 col-md-1 preview_img" onclick="addToPerson(this)"><img class="imgs" id="' + v + '" src="' + img_paths[i] + '"> </div>'
+
+        if(counter%12 == 0) html += '</div>'
+
+      })
+
+      if(counter%12 != 0 ) html += '</div>'
+
+      return html
+
+    }
+
+    function rebuildImgGrid(this_preview){
+
+      t = this_preview
+
+      var face_ids = [];
+      var img_paths = [];
+
+      var imgs = $(this_preview).children('div').children('.preview_img').children('img')
+
+      imgs.each(function(i){
+        face_ids.push($(imgs[i]).prop('id'));
+        img_paths.push($(imgs[i]).prop('src').replace('file:\/\/',''))
+      })
+      assert.equal(face_ids.length,img_paths.length,'rebuildImgGrid id - path not equal')
+
+      return makeImgRow(face_ids,img_paths)
+
+      //$(this_preview).children().remove()
+      //$(this_preview).append(makeImgRow(face_ids,img_paths))
+
+    }
+
+    function moreGroup(){
+
+      $('#img_preview').append(thisgrouploader());
+      $('#img_preview').append('<hr>');
+
+    }
+
+    function createNewPerson() {
+
+      console.log('createNewPerson: ');
+
+      var html = '<div class="row addPerson"><input type="text" name="input" value="Person Name"> <button onclick="addPerson(this)">Add</button></div>'
+
+      $('#person_preview').append(html)
+
+
+    }
+
+    function addPerson(this_person){
+
+      var person_name = $(this_person).parent().children("input").prop('value');
+
+      var person_name_id = person_name.replace(' ','-');
+
+      var buttons = '<span class="buttons"><button id=updatePerson onclick="updatePerson()">updatePerson</button></span>'
+
+      //var html = '<div id="' + person_name_id + '"' + ' onclick="selectPerson(' + "'" +person_name_id + "'" + ')">' + person_name + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
+
+      var html = '<div id="' + person_name_id + '">' + '<span onclick="selectPerson('+ "'" + person_name_id +  "'" +')">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
+
+      html += '<hr>'
+
+      $('#person_preview .addPerson').remove()
+
+      $('#person_preview').append(html)
+
+    }
+
+    function selectPerson(person_name) {
+      console.log('person selected: ', person_name);
+      selected_person = person_name;
+    }
+
+    function addToPerson(this_face) {
+
+      //change to person preview
+
+      var row = $('#' + selected_person+ ' .person_thumbnail .row').last();
+
+      console.log('person_thumbnail last row element number: ',row.children().length%12);
+
+      if (row.children().length%12 == 0 ) $('#' + selected_person+ ' .person_thumbnail').append('<div class="row"></div>');
+
+      var img = $(this_face).html();
+
+      var html = '<div class="col-xs-1 col-sm-1 col-md-1 preview_img" onclick="removeFromPerson(this)">' + img + '</div>'
+
+      $('#' + selected_person+ ' .person_thumbnail .row').last().append(html);
+
+      //change to group preivew
+
+      $(this_face).children().first().remove();
+
+      var this_preview = $(this_face).parent().parent()
+
+      var html = rebuildImgGrid(this_preview)
+
+      $(this_preview).children().remove()
+
+      $(this_preview).append(html)
+
+      $(this_preview).prepend('<button id="addAllToPerson" onclick="addAllToPerson(this)">addAllToPerson</button>');
+
+    }
+
+    function addAllToPerson(this_group) {
+
+      console.log('addAllToPerson: ');
+
+      callers = $(this_group).parent().children('div').children('.preview_img')
+
+      callers.each(function(i){
+        addToPerson(callers[i])
+      })
+
+      $(this_group).parent().next().remove()
+      $(this_group).parent().remove();
+
+    }
+
+    function removeFromPerson(this_face) {
+
+      var parent = $(this_face).parent()
+
+      $(this_face).remove();
+
+      if(parent.children().length == 0) parent.remove()
+
+      var this_preview = $(parent).parent();
+
+      var html = rebuildImgGrid(this_preview);
+
+      $(this_preview).children().remove();
+
+      $(this_preview).append(html);
+
+      //t = $(this_preview);
+
+    }
+
+
+    </script>
+    <div style="margin-left:15px;margin-right:15px">
+
+      <div class="container-fluid">
+
+
+        <div class="row" id="control">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button id=detectImg onclick="loadData()">loadData</button>
+            <button id=createPersonTalbe onclick="createNewPerson()">createNewPerson</button>
+          </div>
+        </div>
+
+
+        <div class="row" id="person_preview">
+          <hr>
+
+        </div>
+
+        <div class="row" id="img_preview">
+          <hr>
+
+        </div>
+
+        <div class="row" id="more_group_button" style="text-align:center">
+          <!--<hr>-->
+          <button id=moreGroup onclick="moreGroup()">moreGroup</button>
+        </div>
+
+
+      </div>
+
+    </div>
+
+
+  </body>
+</html>

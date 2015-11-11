@@ -2,10 +2,300 @@
 <html>
   <head>
     <title>Hello World!</title>
+    <script>
+      var remote = require('remote');
+      var dialog = remote.require('dialog');
+      var fpp = require('./lib/facepp.js');
+      var sqlite3 = require('./lib/sqlite3.js');
+    </script>
   </head>
   <body>
+    <script>
+
+      var indexedDB = window.indexedDB;
+
+      var db;
+
+      function initDB () {
+
+        var request = indexedDB.open('facecutDB',1);
+
+        request.onerror = function (event) {
+
+          console.log('open database error: ', event);
+
+        }
+
+        request.onsuccess = function (event) {
+
+          console.log('open database success: ', event);
+
+          db = event.target.result;
+
+        }
+
+        request.onupgradeneeded = function (event) {
+
+          console.log('database needs upgrade');
+
+          var db = event.target.result;
+
+          var ftlmapstore = db.createObjectStore("log" , {autoIncrement:true});
+
+          //ftlmapstore.createIndex("img_id","img_id",{unique:true});
+          //ftlmapstore.createIndex("detection","detection",{unique:false});
+          ftlmapstore.createIndex("img_path","img_path",{unique:true});
+
+          ftlmapstore.transaction.oncomplete = function (event) {
+
+            console.log('fltmapstore created', event);
+
+          }
+
+          ftlmapstore.transaction.onerror = function (event) {
+
+            console.log('error creating fltmapstore: ' , event);
+
+          }
+
+        }
+
+      }
+
+
+      function insertDetected (img_path,detection) {
+
+        var transaction = db.transaction(["log"],"readwrite");
+
+        transaction.oncomplete = function (event) {
+
+          console.log('transaction complete', event);
+
+        }
+
+        transaction.onerror = function (event) {
+
+          console.log('transaction error', event);
+
+        }
+
+        /*
+        test
+        var request = transaction.objectStore("ftlmap").add({detection:{res:'res'},img_path:"/local/1/1.jpeg"});
+        var request = transaction.objectStore("ftlmap").add({detection:{res:'res'},img_path:"/local/1/3.jpeg"});
+        var request = transaction.objectStore("ftlmap").add({detection:{err:'err'},img_path:"/local/1/2.jpeg"});
+        var request = transaction.objectStore("ftlmap").add({detection:{err:'err'},img_path:"/local/1/4.jpeg"});
+        */
+        //duplicated img_path
+        var request = transaction.objectStore("log").add({detection:detection,img_path:img_path});
+
+        request.onerror = function () {
+
+          console.log('insertDetected error: ',event);
+
+        }
+
+        request.onsuccess = function () {
+
+          console.log('insertDetected success:  ', event);
+
+        }
+
+      }
+
+
+      function getDetected (callback) {
+
+        var r = [];
+
+        var request = db.transaction(["log"]).objectStore("log").index('img_path').openCursor()
+
+        request.onsuccess = function(event) {
+
+          var cursor = event.target.result;
+
+          if (cursor) {
+
+            //console.log(cursor.value.detection.face.length);
+
+            if (cursor.value.detection.face.length > 0) {
+
+              r.push(cursor.key);
+
+            }
+
+            cursor.continue();
+          }
+
+          if (!cursor) callback(r);
+
+        }
+
+      }
+
+
+      function insertError (img_path,err) {
+
+        var transaction = db.transaction(["log"],"readwrite");
+
+        transaction.oncomplete = function (event) {
+
+          console.log('transaction complete', event);
+
+        }
+
+        transaction.onerror = function (event) {
+
+          console.log('transaction error', event);
+
+        }
+
+        var request = transaction.objectStore("log").add({error:err,img_path:img_path});
+
+        request.onerror = function () {
+
+          console.log('insertError error: ',event);
+
+        }
+
+        request.onsuccess = function () {
+
+          console.log('insertError success: ', event);
+
+        }
+
+
+      }
+
+      function getErrored () {
+
+        console.log('getErrored');
+
+      }
+
+
+      function getFace_id (img_path,callback) {
+
+        var request = db.transaction(["log"]).objectStore("log").index("img_path").get(img_path);
+
+        request.onerror = function (event) {
+
+          console.log('getFace_id error: ', event);
+
+        }
+
+        request.onsuccess = function (event) {
+
+          console.log('getFace_id success: ', event);
+
+          var face_id = event.target.result.detection.face.reduce(function(p,c,i,a){
+
+            if (i == 0) return p + c.face_id
+
+            if (i > 0) return p + ',' + c.face_id
+
+          },"")
+
+          callback(face_id)
+
+        }
+
+
+      }
+
+      function migrateToSQL () {
+
+        var request = db.transaction(["log"]).objectStore("log").index('img_path').openCursor()
+
+        request.onsuccess = function(event) {
+
+          var cursor = event.target.result;
+
+          if (cursor) {
+
+            thisdb.insertDetection(cursor.key,cursor.value)
+
+            cursor.continue();
+          }
+
+          if (!cursor) console.log('done');;
+
+        }
+
+      }
+
+    </script>
+
+    <script>
+
+      initDB();
+
+      function detectImg() {
+
+        dialog.showOpenDialog({ properties: [ 'openFile', 'multiSelections' ]},function(img_path){
+
+          fpp.detect(img_path)
+
+        })
+
+      }
+
+      function addToFaceset(faceset_name) {
+
+        getDetected(function(detected){
+
+          fpp.addToFaceset(detected,faceset_name)
+
+        })
+
+      }
+
+    </script>
+
+    <script>
+
+      var thisdb = null;
+
+      function persistDetection() {
+
+        dialog.showOpenDialog({ properties: [ 'openDirectory' ]},function(img_dir){
+
+          if (img_dir.length == 1) thisdb = sqlite3(__dirname,img_dir[0]);
+
+        })
+
+      }
+
+      function addAllToFaceset() {
+
+        var face_ids = thisdb.getAllfaces();
+
+        fpp.addToFaceset(face_ids,'tml2015')
+
+      }
+
+      function qtest(){
+        var session_id = '09cfc9b27d58495fbe023fbf029c34e4'
+        fpp.checkSession(session_id);
+      }
+
+    </script>
+
+    <script>
+      function changeView(){
+        remote.getCurrentWindow().loadUrl('file://' + __dirname + '/visualize.html')
+      }
+    </script>
+
+    <button id=detectImg onclick="detectImg()">detectImg</button>
+    <button id=addToFaceset onclick="addToFaceset('test')">addToFaceset</button>
+    <button id=persistDetection onclick="persistDetection()">persistDetection</button>
+    <button id=persistDetection onclick="changeView()">changeView</button>
+
+<!--
     <h1>Hello World!</h1>
     We are using io.js <script>document.write(process.version)</script>
     and Electron <script>document.write(process.versions['electron'])</script>.
+-->
   </body>
 </html>

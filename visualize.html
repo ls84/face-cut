@@ -36,19 +36,27 @@
         margin-right: -15px;
       }
 */
-      .imgs {
+      .filmstrip {
         width: 100%;
       }
 
       .addPerson {
         text-align: center;
       }
-      .preview_img {
+
+      .group_img {
         padding-left:1px;
         padding-right:1px;
         padding-top:1px;
         padding-bottom:1px;
       }
+      .person_img {
+        padding-left:1px;
+        padding-right:1px;
+        padding-top:1px;
+        padding-bottom:1px;
+      }
+
       .buttons {
         padding-left: 10px;
         padding-right: 10px;
@@ -57,10 +65,51 @@
 
   </head>
   <body>
+
+    <div style="margin-left:15px;margin-right:15px">
+
+      <div class="container-fluid">
+
+
+        <div class="row" id="control">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <button id=detectImg onclick="loadData()">loadData</button>
+            <button id=createPersonTalbe onclick="createNewPerson()">createNewPerson</button>
+          </div>
+        </div>
+
+
+        <div class="row" id="person_preview">
+          <hr>
+
+        </div>
+
+        <div class="row" id="group_preview">
+          <hr>
+
+        </div>
+
+        <div class="row" id="more_group_button" style="text-align:center">
+          <!--<hr>-->
+          <button id=moreGroup onclick="moreGroup()">moreGroup</button>
+        </div>
+
+
+      </div>
+
+    </div>
+
     <script>
     var db;
 
     var selected_person;
+
+    function UIinit() {
+
+      $('#group_preview').delegate('.group_img','click',function(){addToPerson(this)})
+      $('#person_preview').delegate('.person_img','click',function(){removeFromPerson(this)})
+
+    }
 
     function loadData() {
 
@@ -70,9 +119,13 @@
 
         var person = loadPerson();
 
+        console.log('thisgrouploader init');
         thisgrouploader = groupLoader();
 
-        console.log(person);
+        console.log('UI init');
+        UIinit()
+
+        //console.log(person);
 
       })
 
@@ -129,7 +182,9 @@
 
         if (counter%12 == 1) html += '<div class="row">'
 
-        html += '<div class="col-xs-1 col-sm-1 col-md-1 preview_img" onclick="addToPerson(this)"><img class="imgs" id="' + v + '" src="' + img_paths[i] + '"> </div>'
+        //html += '<div class="col-xs-1 col-sm-1 col-md-1 group_img" onclick="addToPerson(this)"><img class="imgs" id="' + v + '" src="' + img_paths[i] + '"> </div>'
+
+        html += '<div class="col-xs-1 col-sm-1 col-md-1"><img id="' + v + '" src="' + img_paths[i] + '"> </div>'
 
         if(counter%12 == 0) html += '</div>'
 
@@ -137,36 +192,40 @@
 
       if(counter%12 != 0 ) html += '</div>'
 
+      //$(html).children().click(function(){console.log(this);})
+
       return html
 
     }
 
     function rebuildImgGrid(this_preview){
 
-      t = this_preview
-
       var face_ids = [];
       var img_paths = [];
 
-      var imgs = $(this_preview).children('div').children('.preview_img').children('img')
+      var imgs = $(this_preview).children('div').children('div').children('img')
 
       imgs.each(function(i){
         face_ids.push($(imgs[i]).prop('id'));
         img_paths.push($(imgs[i]).prop('src').replace('file:\/\/',''))
       })
+
       assert.equal(face_ids.length,img_paths.length,'rebuildImgGrid id - path not equal')
 
       return makeImgRow(face_ids,img_paths)
 
-      //$(this_preview).children().remove()
-      //$(this_preview).append(makeImgRow(face_ids,img_paths))
 
     }
 
     function moreGroup(){
 
-      $('#img_preview').append(thisgrouploader());
-      $('#img_preview').append('<hr>');
+      $('#group_preview').append(thisgrouploader());
+
+      $('#group_preview').children('.row').last().children('.row').children('div').addClass('group_img');
+
+      $('#group_preview').children('.row').last().children('.row').children('div').children('img').addClass('filmstrip');
+
+      $('#group_preview').append('<hr>');
 
     }
 
@@ -218,7 +277,7 @@
 
       var img = $(this_face).html();
 
-      var html = '<div class="col-xs-1 col-sm-1 col-md-1 preview_img" onclick="removeFromPerson(this)">' + img + '</div>'
+      var html = '<div class="col-xs-1 col-sm-1 col-md-1 person_img">' + img + '</div>'
 
       $('#' + selected_person+ ' .person_thumbnail .row').last().append(html);
 
@@ -234,22 +293,68 @@
 
       $(this_preview).append(html)
 
+      $(this_preview).children('.row').children('div').addClass('group_img')
+
+      $(this_preview).children('.row').children('div').children('img').addClass('filmstrip')
+
       $(this_preview).prepend('<button id="addAllToPerson" onclick="addAllToPerson(this)">addAllToPerson</button>');
 
     }
 
     function addAllToPerson(this_group) {
 
+      //rebuildImgGrid(this_group)
+
+      var face_ids = [];
+      var img_paths = [];
+
+      t = $('#' + selected_person+ ' .person_thumbnail img').each(function(i,e){
+
+        face_ids.push($(e).prop('id'));
+        img_paths.push($(e).prop('src').replace('file:\/\/',''))
+
+      })
+
+
+      $(this_group).parent().children('div').children('div').children('img').each(function(i,e){
+
+        face_ids.push($(e).prop('id'));
+        img_paths.push($(e).prop('src').replace('file:\/\/',''))
+
+      })
+
+      assert.equal(face_ids.length,img_paths.length,'addAllToPerson id - path not equal')
+
+      var html = makeImgRow(face_ids,img_paths);
+
+      $('#' + selected_person+ ' .person_thumbnail').children().remove();
+
+      $('#' + selected_person+ ' .person_thumbnail').append(html);
+
+      $('#' + selected_person+ ' .person_thumbnail').children('div').children('div').addClass('person_img')
+
+      $('#' + selected_person+ ' .person_thumbnail').children('div').children('div').children('img').addClass('filmstrip')
+
+
+      $(this_group).parent().next().remove()
+      $(this_group).parent().remove();
+
+
+      /*
       console.log('addAllToPerson: ');
 
-      callers = $(this_group).parent().children('div').children('.preview_img')
+      t = $(this_group)
+
+      var callers = $(this_group).parent().children('div').children('.group_img')
 
       callers.each(function(i){
         addToPerson(callers[i])
       })
+      */
 
-      $(this_group).parent().next().remove()
-      $(this_group).parent().remove();
+
+      //$(this_group).parent().next().remove()
+      //$(this_group).parent().remove();
 
     }
 
@@ -269,45 +374,13 @@
 
       $(this_preview).append(html);
 
-      //t = $(this_preview);
+      $(this_preview).children('div').children('div').addClass('person_img');
+
+      $(this_preview).children('div').children('div').children('img').addClass('filmstrip');
 
     }
 
-
     </script>
-    <div style="margin-left:15px;margin-right:15px">
-
-      <div class="container-fluid">
-
-
-        <div class="row" id="control">
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <button id=detectImg onclick="loadData()">loadData</button>
-            <button id=createPersonTalbe onclick="createNewPerson()">createNewPerson</button>
-          </div>
-        </div>
-
-
-        <div class="row" id="person_preview">
-          <hr>
-
-        </div>
-
-        <div class="row" id="img_preview">
-          <hr>
-
-        </div>
-
-        <div class="row" id="more_group_button" style="text-align:center">
-          <!--<hr>-->
-          <button id=moreGroup onclick="moreGroup()">moreGroup</button>
-        </div>
-
-
-      </div>
-
-    </div>
-
 
   </body>
 </html>

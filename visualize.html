@@ -118,8 +118,17 @@
     function UIinit() {
 
       $('#group_preview').delegate('.group_img','click',function(){addToPerson(this)})
+
       $('#person_preview').delegate('.person_img','click',function(){removeFromPerson(this)})
+
       $('#person_preview').delegate('.updatePerson','click',function(){updatePerson(this)})
+
+      $('#person_preview').delegate('.updateCloud','click',function(){updateCloud(this)});
+
+      $('#person_preview').delegate('.compareLocalAndCloud','click',function(){compareLocalAndCloud(this)});
+
+      $('#person_preview').delegate('.createThisPersonOnCloud','click',function(){createThisPersonOnCloud(this)});
+
       $('#person_preview').delegate('.person_name_span','click',function(){selectPerson(this)})
 
     }
@@ -138,7 +147,8 @@
 
     function loadData() {
 
-      dialog.showOpenDialog({ properties: [ 'openDirectory' ]},function(img_dir){
+      dialog.showOpenDialog({ properties: [ 'openDirectory' ],defaultPath:'/Users/liushuo/Desktop/tml2015/img_seq/'},function(img_dir){
+        //TODO: remove defaultPath, used for testing convienent
 
         if (img_dir.length == 1) db = sqlite3(__dirname,img_dir[0]);
 
@@ -153,6 +163,10 @@
             var person_name_id = person_name.replace(' ','-');
 
             var buttons = '<span class="buttons"><button class="updatePerson">Update This Person</button></span>'
+
+            buttons += '<span class="buttons"><button class="compareLocalAndCloud">Local/Cloud</button></span>'
+
+            buttons += '<span class="buttons"><button class="updateCloud">Update Cloud</button></span>'
 
             var html = '<div id="' + person_name_id + '">' + '<span class="person_name_span">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
 
@@ -172,10 +186,7 @@
 
           })
 
-
         }
-
-        loadPerson();
 
         console.log('thisgrouploader init');
         thisgrouploader = groupLoader();
@@ -183,7 +194,8 @@
         console.log('UI init');
         UIinit()
 
-        //console.log(person);
+        console.log('load person');
+        loadPerson();
 
       })
 
@@ -314,6 +326,10 @@
 
       var buttons = '<span class="buttons"><button class="updatePerson">Update This Person</button></span>'
 
+      buttons += '<span class="buttons"><button class="compareCloud">Local/Cloud</button></span>'
+
+      buttons += '<span class="buttons"><button class="updateCloud">Update Cloud</button></span>'
+
       var html = '<div id="' + person_name_id + '">' + '<span class="person_name_span">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
 
       html += '<hr>'
@@ -440,6 +456,181 @@
       db.updatePerson(person_name,face_ids);
 
     }
+
+    function updateCloud(this_person) {
+
+      var person_name = $(this_person).parent().parent().prop('id').replace('-',' ');
+
+      console.log("updateCloud: ", person_name );
+
+      fpp.getPersonInfo(person_name,function(info){
+
+        //$(this_person).parent().parent().children('.person_thumbnail').before(info)
+
+        var p = new Promise(function(res,rej){
+
+          if (typeof(info) == 'string') rej(info)
+
+          if (typeof(info) == 'object') res(info)
+
+        })
+
+        p.then(function(r){
+
+          var faces_cloud = new Set(r.face.map(function(v){return v.face_id}))
+          var faces_local = new Set();
+          var imgs = $(this_person).parent().siblings('.person_thumbnail').children('.row').children('.person_img').children('img')
+
+          imgs.each(function(i,e){
+
+            faces_local.add($(e).prop('id'))
+
+          })
+
+          var faces_to_add = [];
+
+          faces_local.forEach(function(v){
+
+            if (!faces_cloud.has(v)) faces_to_add.push(v)
+
+          })
+
+          var faces_to_remove = [];
+
+          faces_cloud.forEach(function(v){
+
+            if(!faces_local.has(v)) faces_to_remove.push(v)
+
+          })
+
+          if (faces_to_add.length > 0) fpp.addFaceToPerson(person_name,faces_to_add,function(r){
+
+            console.log('addFaceToPerson: ', r);
+
+          })
+
+          if (faces_to_remove.length > 0) fpp.removeFaceFromPerson(person_name,faces_to_remove,function(r){
+
+            console.log('removeFaceFromPerson: ', r);
+
+          })
+
+
+        })
+
+        .catch(function(r){
+
+          console.log(r);
+
+          $(this_person).parent().siblings('.person_thumbnail').before(r);
+
+        })
+
+      })
+
+
+    }
+
+    function compareLocalAndCloud(this_person){
+
+      var person_name = $(this_person).parent().parent().prop('id').replace('-',' ');
+
+      console.log("compareLocalAndCloud: ", person_name );
+
+      fpp.getPersonInfo(person_name,function(info){
+
+        //$(this_person).parent().parent().children('.person_thumbnail').before(info)
+
+        var p = new Promise(function(res,rej){
+
+          if (typeof(info) == 'string') rej(info)
+
+          if (typeof(info) == 'object') res(info)
+
+        })
+
+        p.then(function(r){
+
+          var faces_cloud = new Set(r.face.map(function(v){return v.face_id}))
+          var faces_local = new Set();
+          var imgs = $(this_person).parent().siblings('.person_thumbnail').children('.row').children('.person_img').children('img')
+
+          imgs.each(function(i,e){
+
+            faces_local.add($(e).prop('id'))
+
+          })
+
+          var faces_to_add = [];
+
+          faces_local.forEach(function(v){
+
+            if (!faces_cloud.has(v)) faces_to_add.push(v)
+
+          })
+
+          var faces_to_remove = [];
+
+          faces_cloud.forEach(function(v){
+
+            if(!faces_local.has(v)) faces_to_remove.push(v)
+
+          })
+
+          var html = '<span class="LocalCloudCompareInfo">' + '+' + faces_to_add.length + ' ' + '-' + faces_to_remove.length + '</span>'
+
+          $(this_person).parent().siblings('.LocalCloudCompareInfo').remove();
+
+          $(this_person).parent().siblings('.person_thumbnail').before(html);
+
+        })
+        .catch(function(r){
+
+          //TODO:assert no such person on cloud
+          console.log(r);
+
+          var b = '<span class="buttons"><button class="createThisPersonOnCloud">Create This Person On Cloud</button></span>'
+          $(this_person).parent().parent().children('.person_thumbnail').before(b);
+
+        })
+
+      })
+
+    }
+
+    function createThisPersonOnCloud (this_person) {
+
+      var person_name = $(this_person).parent().parent().prop('id').replace('-',' ');
+
+      console.log('createThisPersonOnCloud: ', person_name);
+
+      fpp.createPerson(person_name,function(r){
+
+        var p = new Promise(function(res,rej){
+
+          if (typeof(r) == 'string') rej(r)
+
+          if (typeof(r) == 'object') res(r)
+
+        })
+
+        p.then(function(r){
+
+          $(this_person).parent().remove();
+
+        })
+
+        .catch(function(r){
+
+          $(this_person).parent().parent().children('.person_thumbnail').before(r);
+
+        })
+
+      })
+
+    }
+
+
 
     </script>
 

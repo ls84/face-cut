@@ -8,9 +8,13 @@
     <script>
       var assert = require('assert');
       var remote = require('remote');
-      var sqlite3 = require('./lib/sqlite3.js');
+
       var dialog = remote.require('dialog');
       window.$ = window.jQuery = require('jquery');
+
+      var sqlite3 = require('./lib/sqlite3.js');
+      var fpp = require('./lib/facepp.js');
+
     </script>
 
     <style>
@@ -20,7 +24,7 @@
         margin-right: 15px;
       }
       */
-/*
+      /*
       #control {
         margin-left: 15px;
         margin-right: 15px;
@@ -35,7 +39,8 @@
         margin-left: -15px;
         margin-right: -15px;
       }
-*/
+      */
+
       .filmstrip {
         width: 100%;
       }
@@ -61,6 +66,11 @@
         padding-left: 10px;
         padding-right: 10px;
       }
+
+      .selected_person {
+        background-color: #DDDDDD
+      }
+
     </style>
 
   </head>
@@ -100,14 +110,29 @@
     </div>
 
     <script>
+
     var db;
 
-    var selected_person;
+    var selected_person_name_id;
 
     function UIinit() {
 
       $('#group_preview').delegate('.group_img','click',function(){addToPerson(this)})
       $('#person_preview').delegate('.person_img','click',function(){removeFromPerson(this)})
+      $('#person_preview').delegate('.updatePerson','click',function(){updatePerson(this)})
+      $('#person_preview').delegate('.person_name_span','click',function(){selectPerson(this)})
+
+    }
+
+    function selectPerson(this_person) {
+
+      selected_person_name_id = $(this_person).parent().prop('id');
+
+      console.log('selectPerson: ', selected_person_name_id);
+
+      $('.selected_person').removeClass('selected_person');
+
+      $(this_person).parent().addClass('selected_person');
 
     }
 
@@ -117,7 +142,40 @@
 
         if (img_dir.length == 1) db = sqlite3(__dirname,img_dir[0]);
 
-        var person = loadPerson();
+        function loadPerson(){
+
+          var person = db.getPerson()
+
+          person.forEach(function(v){
+
+            var person_name = v;
+
+            var person_name_id = person_name.replace(' ','-');
+
+            var buttons = '<span class="buttons"><button class="updatePerson">Update This Person</button></span>'
+
+            var html = '<div id="' + person_name_id + '">' + '<span class="person_name_span">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
+
+            html += '<hr>'
+
+            $('#person_preview').append(html)
+
+            var face_ids = db.getPersonFaces(person_name);
+
+            var img_paths = db.faceMapImg(face_ids);
+
+            $('#' + person_name_id).children('.person_thumbnail').append(makeImgRow(face_ids,img_paths));
+
+            $('#' + person_name_id).children('.person_thumbnail').children('.row').children('div').addClass('person_img');
+
+            $('#' + person_name_id).children('.person_thumbnail').children('.row').children('.person_img').children('img').addClass('filmstrip');
+
+          })
+
+
+        }
+
+        loadPerson();
 
         console.log('thisgrouploader init');
         thisgrouploader = groupLoader();
@@ -128,14 +186,6 @@
         //console.log(person);
 
       })
-
-    }
-
-    function loadPerson(person_name){
-
-      var person = db.getPerson()
-
-      return person
 
     }
 
@@ -182,8 +232,6 @@
 
         if (counter%12 == 1) html += '<div class="row">'
 
-        //html += '<div class="col-xs-1 col-sm-1 col-md-1 group_img" onclick="addToPerson(this)"><img class="imgs" id="' + v + '" src="' + img_paths[i] + '"> </div>'
-
         html += '<div class="col-xs-1 col-sm-1 col-md-1"><img id="' + v + '" src="' + img_paths[i] + '"> </div>'
 
         if(counter%12 == 0) html += '</div>'
@@ -214,7 +262,6 @@
 
       return makeImgRow(face_ids,img_paths)
 
-
     }
 
     function moreGroup(){
@@ -226,6 +273,25 @@
       $('#group_preview').children('.row').last().children('.row').children('div').children('img').addClass('filmstrip');
 
       $('#group_preview').append('<hr>');
+      $('#person_preview').children('div').children('.person_thumbnail').children('.row').children('.person_img').children('img').each(function(i,e){
+
+        var face_id = $(e).prop('id');
+
+        $('#group_preview ' + '#' + face_id).remove()
+
+      })
+
+      var this_preview = $('#group_preview').children('.row').last()
+
+      var html = rebuildImgGrid(this_preview);
+
+      $('#group_preview').children('.row').last().remove();
+
+      $('#group_preview').append('<div class="row">' + '<button id="addAllToPerson" onclick="addAllToPerson(this)">addAllToPerson</button>' + html + '</div>')
+
+      $('#group_preview').children('.row').last().children('.row').children('div').addClass('group_img');
+
+      $('#group_preview').children('.row').last().children('.row').children('.group_img').children('img').addClass('filmstrip');
 
     }
 
@@ -246,11 +312,9 @@
 
       var person_name_id = person_name.replace(' ','-');
 
-      var buttons = '<span class="buttons"><button id=updatePerson onclick="updatePerson()">updatePerson</button></span>'
+      var buttons = '<span class="buttons"><button class="updatePerson">Update This Person</button></span>'
 
-      //var html = '<div id="' + person_name_id + '"' + ' onclick="selectPerson(' + "'" +person_name_id + "'" + ')">' + person_name + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
-
-      var html = '<div id="' + person_name_id + '">' + '<span onclick="selectPerson('+ "'" + person_name_id +  "'" +')">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
+      var html = '<div id="' + person_name_id + '">' + '<span class="person_name_span">' + person_name + '</span>' + buttons + '<div class="row person_thumbnail"></div>' + '</div>';
 
       html += '<hr>'
 
@@ -258,28 +322,25 @@
 
       $('#person_preview').append(html)
 
-    }
+      db.addPerson(person_name);
 
-    function selectPerson(person_name) {
-      console.log('person selected: ', person_name);
-      selected_person = person_name;
     }
 
     function addToPerson(this_face) {
 
       //change to person preview
 
-      var row = $('#' + selected_person+ ' .person_thumbnail .row').last();
+      var row = $('#' + selected_person_name_id + ' .person_thumbnail .row').last();
 
       console.log('person_thumbnail last row element number: ',row.children().length%12);
 
-      if (row.children().length%12 == 0 ) $('#' + selected_person+ ' .person_thumbnail').append('<div class="row"></div>');
+      if (row.children().length%12 == 0 ) $('#' + selected_person_name_id+ ' .person_thumbnail').append('<div class="row"></div>');
 
       var img = $(this_face).html();
 
       var html = '<div class="col-xs-1 col-sm-1 col-md-1 person_img">' + img + '</div>'
 
-      $('#' + selected_person+ ' .person_thumbnail .row').last().append(html);
+      $('#' + selected_person_name_id+ ' .person_thumbnail .row').last().append(html);
 
       //change to group preivew
 
@@ -308,7 +369,7 @@
       var face_ids = [];
       var img_paths = [];
 
-      t = $('#' + selected_person+ ' .person_thumbnail img').each(function(i,e){
+      $('#' + selected_person_name_id+ ' .person_thumbnail img').each(function(i,e){
 
         face_ids.push($(e).prop('id'));
         img_paths.push($(e).prop('src').replace('file:\/\/',''))
@@ -327,34 +388,17 @@
 
       var html = makeImgRow(face_ids,img_paths);
 
-      $('#' + selected_person+ ' .person_thumbnail').children().remove();
+      $('#' + selected_person_name_id + ' .person_thumbnail').children().remove();
 
-      $('#' + selected_person+ ' .person_thumbnail').append(html);
+      $('#' + selected_person_name_id + ' .person_thumbnail').append(html);
 
-      $('#' + selected_person+ ' .person_thumbnail').children('div').children('div').addClass('person_img')
+      $('#' + selected_person_name_id + ' .person_thumbnail').children('div').children('div').addClass('person_img')
 
-      $('#' + selected_person+ ' .person_thumbnail').children('div').children('div').children('img').addClass('filmstrip')
+      $('#' + selected_person_name_id + ' .person_thumbnail').children('div').children('div').children('img').addClass('filmstrip')
 
 
       $(this_group).parent().next().remove()
       $(this_group).parent().remove();
-
-
-      /*
-      console.log('addAllToPerson: ');
-
-      t = $(this_group)
-
-      var callers = $(this_group).parent().children('div').children('.group_img')
-
-      callers.each(function(i){
-        addToPerson(callers[i])
-      })
-      */
-
-
-      //$(this_group).parent().next().remove()
-      //$(this_group).parent().remove();
 
     }
 
@@ -377,6 +421,23 @@
       $(this_preview).children('div').children('div').addClass('person_img');
 
       $(this_preview).children('div').children('div').children('img').addClass('filmstrip');
+
+    }
+
+    function updatePerson(this_person) {
+
+      var person_name = $(this_person).parent().parent().prop('id').replace('-',' ');
+
+      console.log('updatePerson: ', person_name);
+
+      var face_ids = [];
+
+      $(this_person).parent().next().children('div').children('div').children('img').each(function(i,e){
+        var id = $(e).prop('id');
+        face_ids.push(id);
+      })
+
+      db.updatePerson(person_name,face_ids);
 
     }
 

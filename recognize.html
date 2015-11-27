@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="./lib/recognize.js"> </script>
+
+    <script>
+
+      window.$ = window.jQuery = require('jquery');
+
+    </script>
+
+    <style>
+      .status_fn {
+        float: left
+      }
+
+      .status_s {
+        float: right
+      }
+
+      input[type="checkbox"] {
+        float:left;
+        margin-right: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div>
+
+      <div class="container-fluid">
+
+        <div class="row" id="control" style="text-align:center">
+
+          <span>some controls</span>
+
+        </div>
+
+        <div class="row" id="recognition_functions">
+
+          <span><button onclick="loadData()">loadData</button>
+
+        </div>
+
+        <div class="row" id="recognition_status">
+<!--
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+
+          </div>
+-->
+        </div>
+
+      </div>
+
+    </div>
+
+    <script>
+
+      //require('./lib/_sqlite3')()
+
+    </script>
+
+  </body>
+
+</html>

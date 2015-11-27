@@ -2,14 +2,32 @@
 <html>
   <head>
     <title>Hello World!</title>
+
+    <script>
+
+      window.$ = window.jQuery = require('jquery');
+
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"> </script>
+
+    <script type="text/javascript" src="./lib/nav.js"> </script>
+
+    <!--
     <script>
       var remote = require('remote');
       var dialog = remote.require('dialog');
       var fpp = require('./lib/facepp.js');
       var sqlite3 = require('./lib/sqlite3.js');
     </script>
+    -->
   </head>
   <body>
+  <!--
     <script>
 
       var indexedDB = window.indexedDB;
@@ -296,17 +314,55 @@
 
     </script>
 
+
     <button id=detectImg onclick="detectImg()">detectImg</button>
     <button id=addToFaceset onclick="addToFaceset('test')">addToFaceset</button>
     <button id=persistDetection onclick="persistDetection()">persistDetection</button>
     <button id=changeView onclick="changeView()">changeView</button>
     <button id=goToInfo onclick="goToInfo()">Info</button>
     <button id=goToInfo onclick="goToRecognition()">Recognition</button>
+  -->
+  <nav class="navbar navbar-default">
 
-<!--
-    <h1>Hello World!</h1>
-    We are using io.js <script>document.write(process.version)</script>
-    and Electron <script>document.write(process.versions['electron'])</script>.
--->
+    <div class="container-fluid">
+
+      <div class="navbar-header">
+
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+
+        <a class="navbar-brand" href="#">Brand</a>
+
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbar-collapse">
+
+        <ul class="nav navbar-nav">
+
+          <li><a href="#"><span onclick="goToInfo()">Info</span></a></li>
+
+          <li><a href="#"><span onclick="goToPrepareData()">Prepare Data</span></a></li>
+
+          <li><a href="#"><span onclick="goToRecognize()">Recognize</span></a></li>
+
+        </ul>
+
+      </div>
+
+    </div>
+
+  </nav>
+
+
+
+
+
+
+
+
   </body>
 </html>

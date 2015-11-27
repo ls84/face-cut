@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="./lib/info.js"> </script>
+
+    <script>
+
+      window.$ = window.jQuery = require('jquery');
+
+    </script>
+
+    <style>
+      input[type="checkbox"] {
+        margin-right: 5px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+      }
+
+      .group_person {
+        min-height: 60px;
+        background-color: whitesmoke;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div>
+
+      <div class="container-fluid">
+
+        <div class="row" id="control" style="text-align:center">
+
+          <span>some controls for this div</span>
+
+        </div>
+
+        <div class="row" id="info">
+
+          <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" id="person_list">
+            <div>
+              <button onclick="trainSelectedPerson()">train selected person</button>
+              <button onclick="addSelectedPersonToGroup()">add selected person to group</button>
+            </div>
+          </div>
+
+          <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" id="group_list">
+
+            <div id="createGroup">
+              <input type="text"/>
+              <button onclick="createGroup()">createGroup</button>
+            </div>
+
+          </div>
+
+          <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" id="training_list">
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <script>
+
+      $('#group_list').on('click','.group .group_label',function(){getGroupInfo(this);})
+
+      updatePersonList()
+
+      updateGroupList()
+
+
+    </script>
+
+  </body>
+
+</html>

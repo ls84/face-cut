@@ -285,12 +285,23 @@
       function changeView(){
         remote.getCurrentWindow().loadUrl('file://' + __dirname + '/visualize.html')
       }
+
+      function goToInfo(){
+        remote.getCurrentWindow().loadUrl('file://' + __dirname + '/info.html')
+      }
+
+      function goToRecognition(){
+        remote.getCurrentWindow().loadUrl('file://' + __dirname + '/recognition.html')
+      }
+
     </script>
 
     <button id=detectImg onclick="detectImg()">detectImg</button>
     <button id=addToFaceset onclick="addToFaceset('test')">addToFaceset</button>
     <button id=persistDetection onclick="persistDetection()">persistDetection</button>
-    <button id=persistDetection onclick="changeView()">changeView</button>
+    <button id=changeView onclick="changeView()">changeView</button>
+    <button id=goToInfo onclick="goToInfo()">Info</button>
+    <button id=goToInfo onclick="goToRecognition()">Recognition</button>
 
 <!--
     <h1>Hello World!</h1>

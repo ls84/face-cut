@@ -18,6 +18,43 @@
 
     <script type="text/javascript" src="./lib/nav.js"> </script>
 
+    <!-- template -->
+
+    <script type="text/javascript" src="./lib/prepare.js"> </script>
+
+<style>
+
+  .vbutton_wrapper {
+    height: 100px;
+  }
+
+  .vbutton {
+    height: 40px;
+    width:80px;
+    top:50%;
+    margin-top: -20px;
+    position: relative;
+  }
+
+  .footage_name {
+
+    padding-left: 7px;
+
+  }
+
+  #refresh_button {
+    margin-left: 10px;
+    margin-bottom: 15px;
+  }
+
+  #detect_button {
+    float: right;
+    margin-right: 10px;
+    min-width: 100px
+  }
+
+</style>
+
   </head>
 
   <body>
@@ -45,7 +82,7 @@
 
             <li><a><span onclick="goToInfo()">Info</span></a></li>
 
-            <li><a><span onclick="goToPrepare()">Prepare Data</span></a></li>
+            <li class="active"><a><span onclick="goToPrepareData()">Prepare Data</span></a></li>
 
             <li><a><span onclick="goToRecognize()">Recognize</span></a></li>
 
@@ -56,6 +93,29 @@
       </div>
 
     </nav>
+
+    <!-- navigation -->
+
+    <div class="container-fluid">
+
+      <div class="row">
+
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 vbutton_wrapper">
+
+            <button class="btn btn-primary btn-lg center-block vbutton" style="min-width:70px" onclick="loadFootage()"><span class="glyphicon glyphicon-folder-open"></span></button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <script>
+
+      //$(".container-fluid:nth-child(2) .row:nth-child(2)").on("click","#detect_button",function(){detectSelectedFootage()})
+
+    </script>
 
   </body>
 

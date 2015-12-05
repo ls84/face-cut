@@ -18,7 +18,48 @@
 
     <script type="text/javascript" src="./lib/nav.js"> </script>
 
+    <!--template-->
+
+    <script type="text/javascript" src="./lib/detect.js"> </script>
+
   </head>
+
+  <style>
+
+  .vbutton {
+    margin-top:40px;
+    /*
+    height: 40px;
+    width:80px;
+    top:50%;
+    margin-top: -20px;
+    position: relative;
+    */
+  }
+
+  .footage_name {
+
+    padding-left: 7px;
+
+  }
+
+  #detect_button{
+
+    float: right;
+    margin-right: 10px;
+    min-width: 100px
+
+  }
+
+  #reload_button{
+
+    margin-left: 10px;
+    margin-bottom: 15px;
+
+  }
+
+
+  </style>
 
   <body>
 
@@ -47,7 +88,7 @@
 
             <li><a><span onclick="goToPrepare()">Prepare Data</span></a></li>
 
-            <li><a><span onclick="goToDetect()">Detect Faces</span></a></li>
+            <li class="active"><a><span onclick="goToDetect()">Detect Faces</span></a></li>
 
             <li><a><span onclick="goToRecognize()">Recognize</span></a></li>
 
@@ -58,6 +99,20 @@
       </div>
 
     </nav>
+
+    <div class="container-fluid">
+
+      <div class="row">
+
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+
+            <button class="btn btn-primary btn-lg center-block vbutton" style="min-width:80px" onclick="loadImgSeq()"><span class="glyphicon glyphicon-folder-open"></span></button>
+
+        </div>
+
+      </div>
+
+    </div>
 
   </body>
 

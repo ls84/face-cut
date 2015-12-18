@@ -53,6 +53,10 @@
     min-width: 100px
   }
 
+  ul.navbar-nav li a{
+    cursor: pointer
+  }
+
 </style>
 
   </head>
@@ -82,7 +86,11 @@
 
             <li><a><span onclick="goToInfo()">Info</span></a></li>
 
-            <li class="active"><a><span onclick="goToPrepareData()">Prepare Data</span></a></li>
+            <li class="active"><a><span onclick="goToPrepare()">Prepare Data</span></a></li>
+
+            <li><a><span onclick="goToDetect()">Detect Faces</span></a></li>
+
+            <li><a><span onclick="goToTrain()">Train</span></a></li>
 
             <li><a><span onclick="goToRecognize()">Recognize</span></a></li>
 

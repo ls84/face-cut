@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <script>
+
+      window.$ = window.jQuery = require('jquery');
+
+    </script>
+
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <script type="text/javascript" src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"> </script>
+
+    <script type="text/javascript" src="./lib/nav.js"> </script>
+
+    <script type="text/javascript" src="./lib/train.js"> </script>
+
+    <style>
+
+    ul.navbar-nav li a{
+      cursor: pointer;
+    }
+
+    #heading_col{
+      margin-bottom: 30px;
+    }
+
+    #dir_name {
+      font-weight: 300px;
+      font-size: xx-large;
+      margin-left: 40px;
+      margin-right: 15px;
+    }
+
+    #dir_path {
+      color:darkgrey;
+      font-weight: 100;
+    }
+
+    #createGroup:focus{
+      outline: none
+    }
+
+    #createGroup {
+      background-color: whitesmoke;
+      color:#777
+    }
+
+    #groups_control {
+      padding-top: 40px;
+    }
+
+    #nodata{
+      text-align: center;
+      padding-top: 4px;
+      padding-bottom: 4px;
+      padding-right:20px;
+      padding-left:20px;
+      display: inline-block;
+      margin-right: 10px;
+    }
+
+    .selected_person {
+
+      background-color: whitesmoke;
+
+    }
+    .selected_group {
+
+      background-color: whitesmoke;
+
+    }
+
+    .filmstrip {
+      padding-left: 0px;
+      padding-right: 0px;
+
+    }
+
+    img {
+      width: 100%;
+    }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-default">
+
+      <div class="container-fluid">
+
+        <div class="navbar-header">
+
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse" aria-expanded="false">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+
+          <a class="navbar-brand" href="#">Brand</a>
+
+        </div>
+
+        <div class="collapse navbar-collapse" id="navbar-collapse">
+
+          <ul class="nav navbar-nav">
+
+            <li><a><span onclick="goToInfo()">Info</span></a></li>
+
+            <li><a><span onclick="goToPrepare()">Prepare Data</span></a></li>
+
+            <li><a><span onclick="goToDetect()">Detect Faces</span></a></li>
+
+            <li class="active"><a><span onclick="goToTrain()">Train</span></a></li>
+
+            <li><a><span onclick="goToRecognize()">Recognize</span></a></li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </nav>
+
+
+    <div class="container-fluid">
+
+      <div class="row">
+
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12" id="heading_col">
+
+        </div>
+
+      </div>
+
+
+
+    </div>
+
+    <script>
+
+      $("body").on('click',".group_control_block",function(){selectThisGroup(this)})
+
+      $("body").on('click',"#newPerson",function(){addNewPerson(this)})
+
+      $("body").on('click',"#images .filmstrip",function(){addToPerson(this)})
+
+      $("body").on('click',"#person .filmstrip",function(){removeFromPerson(this)})
+
+      $("body").on('click',"#person_col li",function(){selectPerson(this)})
+
+      $("body").on('click',"#addAllToPerson",function(){addAllToPerson()})
+
+      $("body").on('click',"#personSave",function(){personSave()})
+
+      $("body").on('click',"#personCommit",function(){personCommit()})
+
+
+      //$('#person_col li').on('click',function(){selectPerson(this)})
+
+      //keyboard control
+      $("body").keyup(function(e){
+
+        if (e.keyCode == 39) {
+
+          var next_group_id = current_group_id + 1;
+
+          try {
+
+            $("#group_images").children().remove()
+
+            imageloader.show(next_group_id, $("#group_images"))
+
+            $(".selected_group").removeClass("selected_group")
+
+            $("#" + next_group_id.toString()).addClass("selected_group")
+
+            current_group_id = next_group_id;
+
+          } catch (e) {
+
+            console.log("no more next group");
+
+          }
+
+        }
+
+        if (e.keyCode == 37) {
+
+          var previous_group_id = current_group_id - 1;
+
+          try {
+
+            $("#group_images").children().remove()
+
+            imageloader.show(previous_group_id, $("#group_images"))
+
+            $(".selected_group").removeClass("selected_group")
+
+            $("#" + previous_group_id.toString()).addClass("selected_group")
+
+            current_group_id = previous_group_id
+
+          } catch (e) {
+
+            console.log("no more previous group");
+
+          }
+
+        }
+
+      })
+
+      loadTrainingData();
+    </script>
+
+  </body>
+
+</html>

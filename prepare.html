@@ -106,6 +106,7 @@
 
     <div class="container-fluid">
 
+<!--
       <div class="row">
 
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12 vbutton_wrapper">
@@ -115,13 +116,15 @@
         </div>
 
       </div>
+-->
 
     </div>
 
 
     <script>
 
-      //$(".container-fluid:nth-child(2) .row:nth-child(2)").on("click","#detect_button",function(){detectSelectedFootage()})
+      $('body').on("click","#detect_button",function(){detectSelectedFootage()})
+      loadFootage()
 
     </script>
 

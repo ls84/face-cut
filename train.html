@@ -164,8 +164,9 @@
 
       $("body").on('click',"#personCommit",function(){personCommit()})
 
+      $("body").on('mouseenter',".filmstrip img",function(){spot_face(this);})
 
-      //$('#person_col li').on('click',function(){selectPerson(this)})
+      $("body").on('mouseleave',".filmstrip img",function(){spot_face(this);})
 
       //keyboard control
       $("body").keyup(function(e){
